@@ -28,7 +28,10 @@ contract DeployMoonChute is Script {
         vm.startBroadcast(bundlerPrivKey);
         // address payable account = payable(kernelFactory.getAccountAddress(bundler, 0, bundler));
         address account = 0x881b5b9355C70E3ae5dEC10Ea0ACdfBB55f94910;
+        address paymaster = 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9;
         entryPoint.depositTo{value: 1000000000000000000}(account);
+        entryPoint.depositTo{value: 1000000000000000000}(paymaster);
+        
         vm.stopBroadcast();
     }
 }
