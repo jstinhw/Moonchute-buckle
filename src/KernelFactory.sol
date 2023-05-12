@@ -14,14 +14,14 @@ contract KernelFactory {
         kernelTemplate = new Kernel(_entryPoint);
     }
 
-    function createAccount(address _owner, uint256 _index) external returns (EIP1967Proxy proxy) {
+    function createAccount(address _owner, uint256 _index, address _twoFactor) external returns (EIP1967Proxy proxy) {
         bytes32 salt = keccak256(abi.encodePacked(_owner, _index));
         address addr = Create2.computeAddress(
             salt,
             keccak256(
                 abi.encodePacked(
                     type(EIP1967Proxy).creationCode,
-                    abi.encode(address(kernelTemplate), abi.encodeCall(Kernel.initialize, (_owner)))
+                    abi.encode(address(kernelTemplate), abi.encodeCall(Kernel.initialize, (_owner, _twoFactor)))
                 )
             )
         );
@@ -29,18 +29,18 @@ contract KernelFactory {
             return EIP1967Proxy(payable(addr));
         }
         proxy =
-        new EIP1967Proxy{salt: salt}(address(kernelTemplate), abi.encodeWithSelector(Kernel.initialize.selector, _owner));
+        new EIP1967Proxy{salt: salt}(address(kernelTemplate), abi.encodeWithSelector(Kernel.initialize.selector, _owner, _twoFactor));
         emit AccountCreated(address(proxy), _owner, _index);
     }
 
-    function getAccountAddress(address _owner, uint256 _index) public view returns (address) {
+    function getAccountAddress(address _owner, uint256 _index, address _twoFactor) public view returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(_owner, _index));
         return Create2.computeAddress(
             salt,
             keccak256(
                 abi.encodePacked(
                     type(EIP1967Proxy).creationCode,
-                    abi.encode(address(kernelTemplate), abi.encodeCall(Kernel.initialize, (_owner)))
+                    abi.encode(address(kernelTemplate), abi.encodeCall(Kernel.initialize, (_owner, _twoFactor)))
                 )
             )
         );
