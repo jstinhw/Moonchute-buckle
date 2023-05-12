@@ -5,7 +5,9 @@
   "version": "3.0.0-rc.5",
   "scripts": {
     "prepack": "./scripts/prepack-contracts-package.sh",
-    "postpack": "./scripts/postpack-contracts-package.sh"
+    "postpack": "./scripts/postpack-contracts-package.sh",
+    "deploy": "forge script scripts/DeployMoonChute.s.sol --broadcast --watch --rpc-url http://127.0.0.1:8545 -vvv",
+    "deposit": "forge script scripts/Deposit.s.sol --broadcast --watch --rpc-url http://127.0.0.1:8545 -vvv"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
