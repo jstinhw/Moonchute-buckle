@@ -58,7 +58,7 @@ contract KernelTest is Test {
                 SimpleAccount.execute, (address(testCounter), 0, abi.encodeCall(TestCounter.count, ()))
                 ),
             callGasLimit: 100000,
-            verificationGasLimit: 200000,
+            verificationGasLimit: 300000,
             preVerificationGas: 200000,
             maxFeePerGas: 100000,
             maxPriorityFeePerGas: 100000,

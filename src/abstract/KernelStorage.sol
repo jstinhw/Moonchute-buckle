@@ -5,6 +5,7 @@ import "account-abstraction/interfaces/IEntryPoint.sol";
 
 struct WalletKernelStorage {
     address owner;
+    address twoFactorAddress;
 }
 
 contract KernelStorage {

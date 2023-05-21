@@ -10,6 +10,7 @@ import {EntryPoint} from  "account-abstraction/core/EntryPoint.sol";
 import "./utils/Exec.sol";
 import "./abstract/Compatibility.sol";
 import "./abstract/KernelStorage.sol";
+import "forge-std/console2.sol";
 
 /// @title Kernel
 /// @author taek<leekt216@gmail.com>
@@ -29,10 +30,11 @@ contract Kernel is IAccount, EIP712, Compatibility, KernelStorage {
     /// @notice initialize wallet kernel
     /// @dev this function should be called only once, implementation initialize is blocked by owner = address(1)
     /// @param _owner owner address
-    function initialize(address _owner) external {
+    function initialize(address _owner, address _twoFactor) external {
         WalletKernelStorage storage ws = getKernelStorage();
         require(ws.owner == address(0), "account: already initialized");
         ws.owner = _owner;
+        ws.twoFactorAddress = _twoFactor;
     }
 
     /// @notice Query plugin for data
@@ -58,7 +60,7 @@ contract Kernel is IAccount, EIP712, Compatibility, KernelStorage {
     /// @param operation operation type (call or delegatecall)
     function executeAndRevert(address to, uint256 value, bytes calldata data, Operation operation) external {
         require(
-            msg.sender == address(entryPoint) || msg.sender == getKernelStorage().owner,
+            msg.sender == address(entryPoint),
             "account: not from entrypoint or owner"
         );
         bool success;
@@ -86,39 +88,43 @@ contract Kernel is IAccount, EIP712, Compatibility, KernelStorage {
         returns (uint256 validationData)
     {
         require(msg.sender == address(entryPoint), "account: not from entryPoint");
-        if (userOp.signature.length == 65) {
+        // if (userOp.signature.length == 65) {
+        if (address(bytes20(userOp.callData[16:36])) == address(this)) {
             validationData = _validateUserOp(userOp, userOpHash);
         } else if (userOp.signature.length > 97) {
             // userOp.signature = address(plugin) + validUntil + validAfter + pluginData + pluginSignature
-            address plugin = address(bytes20(userOp.signature[0:20]));
-            uint48 validUntil = uint48(bytes6(userOp.signature[20:26]));
-            uint48 validAfter = uint48(bytes6(userOp.signature[26:32]));
-            bytes memory signature = userOp.signature[32:97];
-            (bytes memory data,) = abi.decode(userOp.signature[97:], (bytes, bytes));
-            bytes32 digest = _hashTypedDataV4(
-                keccak256(
-                    abi.encode(
-                        keccak256(
-                            "ValidateUserOpPlugin(address plugin,uint48 validUntil,uint48 validAfter,bytes data)"
-                        ), // we are going to trust plugin for verification
-                        plugin,
-                        validUntil,
-                        validAfter,
-                        keccak256(data)
-                    )
-                )
-            );
+            // address plugin = address(bytes20(userOp.signature[0:20]));
+            // uint48 validUntil = uint48(bytes6(userOp.signature[20:26]));
+            // uint48 validAfter = uint48(bytes6(userOp.signature[26:32]));
+            // bytes memory signature = userOp.signature[32:97];
+            // (bytes memory data,) = abi.decode(userOp.signature[97:], (bytes, bytes));
+            // bytes32 digest = _hashTypedDataV4(
+            //     keccak256(
+            //         abi.encode(
+            //             keccak256(
+            //                 "ValidateUserOpPlugin(address plugin,uint48 validUntil,uint48 validAfter,bytes data)"
+            //             ), // we are going to trust plugin for verification
+            //             plugin,
+            //             validUntil,
+            //             validAfter,
+            //             keccak256(data)
+            //         )
+            //     )
+            // );
+            // uint48 validUntil = uint48(bytes6(userOp.signature[0:6]));
+            // uint48 validAfter = uint48(bytes6(userOp.signature[6:12]));
 
-            address signer = ECDSA.recover(digest, signature);
-            if (getKernelStorage().owner != signer) {
+            bytes memory signatureOwner = userOp.signature[0:65];
+            bytes memory signatureTwoFactor = userOp.signature[65:130];
+            address signer = ECDSA.recover(ECDSA.toEthSignedMessageHash(userOpHash), signatureOwner);
+            address twoFactor = ECDSA.recover(ECDSA.toEthSignedMessageHash(userOpHash), signatureTwoFactor);
+
+            if (getKernelStorage().owner != signer || getKernelStorage().twoFactorAddress != twoFactor) {
                 return SIG_VALIDATION_FAILED;
             }
-            bytes memory ret = _delegateToPlugin(plugin, userOp, userOpHash, missingAccountFunds);
-            bool res = abi.decode(ret, (bool));
-            if (!res) {
-                return SIG_VALIDATION_FAILED;
-            }
-            validationData = _packValidationData(!res, validUntil, validAfter);
+            validationData = 0;
+        } else if (bytes4(userOp.callData[164:168]) == hex"940d3c60") {
+            revert InvalidSignatureLength();
         } else {
             revert InvalidSignatureLength();
         }
@@ -185,4 +191,6 @@ contract Kernel is IAccount, EIP712, Compatibility, KernelStorage {
             return 0xffffffff;
         }
     }
+
+    function lock() public pure {}
 }
