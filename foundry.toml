@@ -3,5 +3,10 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 remappings = ['account-abstraction/=lib/account-abstraction/contracts/']
+gas_price = 2000000016
+
+[rpc_endpoints]
+anvil = "${ANVIL_RPC_URL}"
+mumbai="${MUMBAI_RPC_URL}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
