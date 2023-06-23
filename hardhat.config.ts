@@ -19,7 +19,20 @@ function getAccounts(): string[] | { mnemonic: string } {
 }
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.18",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.18",
+        settings: {
+          viaIR: true,
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          }
+        },
+      }
+    ],
+  },
   networks: {
     mumbai: {
       url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_ID}`,
@@ -49,7 +62,7 @@ const config: HardhatUserConfig = {
       url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: getAccounts(),
     },
-  }
+  },
 };
 
 export default config;

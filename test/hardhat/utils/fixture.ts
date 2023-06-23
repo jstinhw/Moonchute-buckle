@@ -8,6 +8,7 @@ export const kernelFixture = async () => {
   const EntryPointFactory = await ethers.getContractFactory("EntryPoint");
   const KernelFacFactory = await ethers.getContractFactory("KernelFactoryPasskeys");
   const SampleNFTFactory = await ethers.getContractFactory("SampleNFT");
+  const KernelPasskeysFactory = await ethers.getContractFactory("KernelPasskeys");
 
   const entryPoint = await EntryPointFactory.deploy();
   const ellipticCurve = await EllipticCurve.deploy();
@@ -125,6 +126,16 @@ export const kernelFixture = async () => {
     await sendRes.wait();
   }
 
+  const verifyTypedDataSignature = async (kernel: string, hash: string, signature: string) => {
+    const kernelContract = await ethers.getContractAt("KernelPasskeys", kernel);
+    // console.log("kernelContract", kernelContract);
+    console.log("kernel", kernel);
+    console.log("hash:", hash);
+    console.log("signature", signature);
+    const isValid = await kernelContract.isValidSignature(hash, signature);
+    console.log("sig isValid", isValid);
+  }
+
   const depositEntryPoint = async (staker: any) => {
     await entryPoint.connect(beneficiary).depositTo(staker, { value: "1000000000000000000" });
   }
@@ -162,7 +173,8 @@ export const kernelFixture = async () => {
     depositEntryPoint,
     fillUserOp,
     sendUserOp,
-    getKernelAddress
+    getKernelAddress,
+    verifyTypedDataSignature
   }
 
 }

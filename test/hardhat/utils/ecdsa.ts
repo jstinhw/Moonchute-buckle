@@ -38,3 +38,27 @@ export const signECDSA = (
   const s = signByPasskeys.s.toString('hex').padStart(64, '0');
   return '0x' + r + s;
 }
+
+export const signTypedHashECDSA = (
+  privateKey: any, 
+  message: string, 
+  origin: string,
+  authDataStr: string
+) => {
+  const clientData = {
+    type: 'webauthn.get',
+    challenge: message.slice(2,), // utils.hashMessage(utils.arrayify(message as any)).slice(2,), // message, // utils.arrayify(message as any),
+    origin: origin,
+    crossOrigin: false
+  };
+  const authDataBuffer = Buffer.from(authDataStr, 'base64');
+  const clientString = Buffer.from(JSON.stringify(clientData))
+  const clientDataHash = ethers.utils.sha256(clientString);
+  const signatureBase = Buffer.concat([authDataBuffer, ethers.utils.arrayify(clientDataHash)]);
+  const signatureBaseHash = ethers.utils.sha256(signatureBase).slice(2,);
+
+  const signByPasskeys = privateKey.sign(signatureBaseHash);
+  const r = signByPasskeys.r.toString('hex').padStart(64, '0');
+  const s = signByPasskeys.s.toString('hex').padStart(64, '0');
+  return '0x' + r + s;
+}
