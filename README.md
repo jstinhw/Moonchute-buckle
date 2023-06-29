@@ -1,10 +1,9 @@
-# Kernel
+# MoonChute Buckle
 
-A minimal and efficient ERC-4337-compatible smart contract account designed to be extended.
+A 2FA ERC-4337-compatible contract wallet extended from [Zerodev Kernel v1](https://zerodev.app/).
 
-- Intro blog: https://docs.zerodev.app/blog/kernel-minimal-extensible-account-for-aa-wallets
-- Build plugins: https://docs.zerodev.app/use-wallets/use-session-keys
-- Use ZeroDev: https://docs.zerodev.app/
+
+- Create MoonChute 2FA wallet: https://docs.moonchute.xyz/
 
 ## Build
 

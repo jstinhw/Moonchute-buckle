@@ -200,4 +200,76 @@ contract MoonChuteTest is Test {
     assert(sampleNFT.balanceOf(account) == 1);
     assert(sampleNFT.ownerOf(1) == account);
   }
+
+  function testInvalidSignature() public {
+     address payable account = payable(kernelFactory.getAccountAddress(user1, 0, user2));
+    entryPoint.depositTo{value: 1000000000000000000}(account);
+    UserOperation[] memory ops = new UserOperation[](1);
+    ops[0] = UserOperation({
+        sender: account,
+        nonce: 0,
+        initCode: abi.encodePacked(kernelFactory, abi.encodeCall(KernelFactory.createAccount, (user1, 0, user2))),
+        callData: abi.encodeWithSelector(
+          hex"940d3c60", account, 0, abi.encodeCall(KernelStorage.getOwner, ()), 0
+          // hex"940d3c60", address(sampleNFT), 0, abi.encodeCall(SampleNFT.mint, (account)), 0
+        ),
+        callGasLimit: 100000,
+        verificationGasLimit: 300000,
+        preVerificationGas: 200000,
+        maxFeePerGas: 100000,
+        maxPriorityFeePerGas: 100000,
+        paymasterAndData: hex"",
+        signature: hex""
+    });
+    ops[0].signature = signUserOp(ops[0], user1, user1PrivKey);
+
+    entryPoint.handleOps(ops, payable(bundler));
+
+    // sign message
+    string memory message = "Hello World!";
+    bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", bytes(message).length, message));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(user1PrivKey, messageHash.toEthSignedMessageHash());
+    bytes memory signature = abi.encodePacked(r, s, v);
+    bytes memory magic_value = abi.encodeWithSelector(0xffffffff);
+    bytes memory isValid = abi.encodeWithSelector(Kernel(account).isValidSignature(messageHash, signature));
+    assertEq(isValid, magic_value);
+  }
+
+  function testValidSignature() public {
+     address payable account = payable(kernelFactory.getAccountAddress(user1, 0, user2));
+    entryPoint.depositTo{value: 1000000000000000000}(account);
+    UserOperation[] memory ops = new UserOperation[](1);
+    ops[0] = UserOperation({
+        sender: account,
+        nonce: 0,
+        initCode: abi.encodePacked(kernelFactory, abi.encodeCall(KernelFactory.createAccount, (user1, 0, user2))),
+        callData: abi.encodeWithSelector(
+          hex"940d3c60", account, 0, abi.encodeCall(KernelStorage.getOwner, ()), 0
+          // hex"940d3c60", address(sampleNFT), 0, abi.encodeCall(SampleNFT.mint, (account)), 0
+        ),
+        callGasLimit: 100000,
+        verificationGasLimit: 300000,
+        preVerificationGas: 200000,
+        maxFeePerGas: 100000,
+        maxPriorityFeePerGas: 100000,
+        paymasterAndData: hex"",
+        signature: hex""
+    });
+    ops[0].signature = signUserOp(ops[0], user1, user1PrivKey);
+
+    entryPoint.handleOps(ops, payable(bundler));
+
+    // sign message
+    string memory message = "Hello World!";
+    bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", bytes(message).length, message));
+    (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(user1PrivKey, messageHash.toEthSignedMessageHash());
+    (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(user2PrivKey, messageHash.toEthSignedMessageHash());
+
+    bytes memory signatureOwner = abi.encodePacked(r1, s1, v1);
+    bytes memory signatureTwoFactor = abi.encodePacked(r2, s2, v2);
+
+    bytes memory magic_value = abi.encodeWithSelector(0x1626ba7e);
+    bytes memory isValid = abi.encodeWithSelector(Kernel(account).isValidSignature(messageHash, abi.encodePacked(signatureOwner, signatureTwoFactor)));
+    assertEq(isValid, magic_value);
+  }
 }

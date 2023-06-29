@@ -20,5 +20,5 @@ abstract contract Compatibility {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function isValidSignature(bytes32 _hash, bytes memory _signature) public view virtual returns (bytes4);
+    function isValidSignature(bytes32 _hash, bytes calldata _signature) public view virtual returns (bytes4);
 }

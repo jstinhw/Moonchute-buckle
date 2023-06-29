@@ -177,15 +177,21 @@ contract Kernel is IAccount, EIP712, Compatibility, KernelStorage {
     /// @dev this function will validate signature using eip1271
     /// @param _hash hash to be signed
     /// @param _signature signature
-    function isValidSignature(bytes32 _hash, bytes memory _signature) public view override returns (bytes4) {
+    function isValidSignature(bytes32 _hash, bytes calldata _signature) public view override returns (bytes4) {
         WalletKernelStorage storage ws = getKernelStorage();
-        if (ws.owner == ECDSA.recover(_hash, _signature)) {
+        if (_signature.length < 130) {
+            return 0xffffffff;
+        }
+        bytes memory signatureOwner = _signature[0:65];
+        bytes memory signatureTwoFactor = _signature[65:130];
+        if (ws.owner == ECDSA.recover(_hash, signatureOwner) && ws.twoFactorAddress == ECDSA.recover(_hash, signatureTwoFactor)) {
             return 0x1626ba7e;
         }
         bytes32 hash = ECDSA.toEthSignedMessageHash(_hash);
-        address recovered = ECDSA.recover(hash, _signature);
+        address recoveredOwner = ECDSA.recover(hash, signatureOwner);
+        address recoveredTwoFactor = ECDSA.recover(hash, signatureTwoFactor);
         // Validate signatures
-        if (ws.owner == recovered) {
+        if (ws.owner == recoveredOwner && ws.twoFactorAddress == recoveredTwoFactor) {
             return 0x1626ba7e;
         } else {
             return 0xffffffff;

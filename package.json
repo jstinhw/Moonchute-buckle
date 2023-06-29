@@ -6,8 +6,10 @@
   "scripts": {
     "prepack": "./scripts/prepack-contracts-package.sh",
     "postpack": "./scripts/postpack-contracts-package.sh",
-    "deploy": "forge script scripts/DeployMoonChute.s.sol --broadcast --watch --rpc-url http://127.0.0.1:8545 -vvv",
-    "deposit": "forge script scripts/Deposit.s.sol --broadcast --watch --rpc-url http://127.0.0.1:8545 -vvv"
+    "deploy:anvil": "forge script scripts/DeployMoonChute.s.sol --broadcast -f anvil -vvv",
+    "deploy:mumbai": "forge script scripts/DeployMoonChuteMumbai.s.sol --broadcast -f mumbai -vvv",
+    "stake:mumbai": "forge script scripts/AddStakeMumbai.s.sol --broadcast -f mumbai -vvv",
+    "deploy:passkeys:anvil": "forge script scripts/DeployMoonChutePasskeys.s.sol --broadcast -f anvil -vvv"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
@@ -15,6 +17,7 @@
     "@typechain/ethers-v5": "^10.2.0",
     "@typechain/hardhat": "^6.1.5",
     "@types/chai": "^4.3.4",
+    "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
     "chai": "^4.3.7",
