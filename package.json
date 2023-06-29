@@ -8,7 +8,8 @@
     "postpack": "./scripts/postpack-contracts-package.sh",
     "deploy:anvil": "forge script scripts/DeployMoonChute.s.sol --broadcast -f anvil -vvv",
     "deploy:mumbai": "forge script scripts/DeployMoonChuteMumbai.s.sol --broadcast -f mumbai -vvv",
-    "stake:mumbai": "forge script scripts/AddStakeMumbai.s.sol --broadcast -f mumbai -vvv"
+    "stake:mumbai": "forge script scripts/AddStakeMumbai.s.sol --broadcast -f mumbai -vvv",
+    "deploy:passkeys:anvil": "forge script scripts/DeployMoonChutePasskeys.s.sol --broadcast -f anvil -vvv"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
